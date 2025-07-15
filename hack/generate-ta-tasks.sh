@@ -14,10 +14,23 @@ command -v go &> /dev/null || { echo Please install golang to run this tool; exi
 HACK_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 ROOT_DIR="$(git rev-parse --show-toplevel)"
 TASK_DIR="$(realpath "${ROOT_DIR}/task")"
+: "${TRUSTED_ARTIFACTS=github.com/konflux-ci/build-definitions/task-generator/trusted-artifacts@latest}"
 
-tashbin="$(mktemp --dry-run)"
-GOTOOLCHAIN=auto GOSUMDB=sum.golang.org go build -C "${ROOT_DIR}/task-generator/trusted-artifacts" -o "${tashbin}"
-trap 'rm "${tashbin}"' EXIT
+tashdir="$(mktemp --dry-run)"
+if [[ -d "${TRUSTED_ARTIFACTS}" ]]; then
+    tashbin=${tashdir}/trusted-artifacts
+    GOTOOLCHAIN=auto GOSUMDB=sum.golang.org go build -C "${TRUSTED_ARTIFACTS}" -o "${tashbin}"
+else
+    GOTOOLCHAIN=auto GOSUMDB=sum.golang.org GOBIN="$tashdir" go install "${TRUSTED_ARTIFACTS}"
+    bin=("${tashdir}"/*)
+    if [[ ${#bin[@]} -ne 1 ]]; then
+      echo "Expected exactly one executable, got ${#bin[@]}: ${bin[*]}" >&2
+      exit 1
+    fi
+    tashbin=${bin[0]}
+fi
+trap 'rm -r "${tashdir}"' EXIT
+
 tash() {
   "${tashbin}" "$@"
 }
