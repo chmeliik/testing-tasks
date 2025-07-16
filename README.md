@@ -40,6 +40,28 @@ spec:
   image:
     name: acmiel-tenant/git-clone
     visibility: public
+---
+apiVersion: appstudio.redhat.com/v1beta2
+kind: IntegrationTestScenario
+metadata:
+  name: git-clone-conforma
+spec:
+  application: testing-tasks
+  contexts:
+    - description: Policy check for git-clone task
+      name: component_git-clone
+  params:
+    - name: POLICY_CONFIGURATION
+      value: <releng-tenant>/tekton-bundle-standard
+  resolverRef:
+    params:
+      - name: url
+        value: https://github.com/konflux-ci/build-definitions
+      - name: revision
+        value: main
+      - name: pathInRepo
+        value: pipelines/enterprise-contract.yaml
+    resolver: git
 ```
 
 </details>
