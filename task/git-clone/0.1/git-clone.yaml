@@ -352,6 +352,8 @@ spec:
         echo "Running symlink check"
         check_symlinks
       fi
+
+      echo hi
   workspaces:
   - description: The git repo will be cloned onto the volume backing this Workspace.
     name: output
