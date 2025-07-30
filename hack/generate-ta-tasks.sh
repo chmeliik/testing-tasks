@@ -19,7 +19,7 @@ command -v go &> /dev/null || { echo Please install golang to run this tool; exi
 HACK_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 ROOT_DIR="$(git rev-parse --show-toplevel)"
 TASK_DIR="$(realpath "${ROOT_DIR}/task")"
-: "${TRUSTED_ARTIFACTS=github.com/konflux-ci/build-definitions/task-generator/trusted-artifacts@latest}"
+: "${TRUSTED_ARTIFACTS=../build-definitions/task-generator/trusted-artifacts}"
 
 tashdir="$(mktemp --dry-run)"
 if [[ -d "${TRUSTED_ARTIFACTS}" ]]; then
