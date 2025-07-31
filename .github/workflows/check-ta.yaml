@@ -19,14 +19,10 @@ jobs:
 
       - name: Check Trusted Artifact variants
         id: check
-<<<<<<< ours
-        run: hack/generate-ta-tasks.sh
-        env:
-          TRUSTED_ARTIFACTS: github.com/konflux-ci/build-definitions/task-generator/trusted-artifacts@latest
-=======
         run: |
           hack/generate-ta-tasks.sh
->>>>>>> theirs
+        env:
+          TRUSTED_ARTIFACTS: github.com/konflux-ci/build-definitions/task-generator/trusted-artifacts@latest
 
       # TODO: re-enable this check
       # - name: Check missing Trusted Artifact variants
