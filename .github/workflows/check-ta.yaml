@@ -19,14 +19,20 @@ jobs:
 
       - name: Check Trusted Artifact variants
         id: check
+<<<<<<< ours
         run: hack/generate-ta-tasks.sh
         env:
           TRUSTED_ARTIFACTS: github.com/konflux-ci/build-definitions/task-generator/trusted-artifacts@latest
+=======
+        run: |
+          hack/generate-ta-tasks.sh
+>>>>>>> theirs
 
       # TODO: re-enable this check
       # - name: Check missing Trusted Artifact variants
       #   id: missing
-      #   run: hack/missing-ta-tasks.sh
+      #   run: |
+      #     hack/missing-ta-tasks.sh
 
       - name: Attach patch
         if: ${{ steps.check.conclusion == 'failure' }}
