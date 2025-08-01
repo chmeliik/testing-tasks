@@ -1,0 +1,11 @@
+diff a/SHARED-CI.md b/SHARED-CI.md	(rejected hunks)
+@@ -27,7 +27,8 @@ version of the templates you have.
+ > If you have [`uv`][uv] installed, you can run `uvx cruft` and don't need
+ > to install `cruft` itself.
+ 
+-TODO: add a github action that checks for updates and sends PRs.
++Your repo also has an automated workflow that periodically checks for updates and
++sends automated PRs. See [Shared CI Updater](#shared-ci-updater) for more details.
+ 
+ ## 🔧 Making changes
+ 
