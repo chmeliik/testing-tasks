@@ -1,15 +1,19 @@
+# <TEMPLATED FILE!>
+# This file comes from the templates at https://github.com/chmeliik/task-repo-boilerplate.
+# Please consider sending a PR upstream instead of editing the file directly.
+# See the SHARED-CI.md document in this repo for more details.
+
+# Inspired by https://cruft.github.io/cruft/#automating-updates-with-github-actions
 name: Update shared CI files
-permissions:
-  contents: write
-  actions: write
-  pull-requests: write
-on:
-  workflow_dispatch:
+'on':
+  workflow_dispatch:  # Allow to run manually
+  schedule:
+    - cron: "0 2 * * 0"  # Every Sunday at 02:00
 jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4.2.2
         with:
           # cruft works better with full git history
           fetch-depth: 0
@@ -20,19 +24,21 @@ jobs:
           #!/bin/bash
           set -euo pipefail
 
-          pipx run cruft update --skip-apply-ask --refresh-private-variables
+          pipx run cruft update --skip-apply-ask
           git restore --staged .
 
-          cat << EOF > /tmp/body.txt
-          Update shared CI from <https://github.com/chmeliik/task-repo-boilerplate>
+          cat << EOF > /tmp/body.md
+          [cruft] has found updates in <https://github.com/chmeliik/task-repo-boilerplate>
 
-          [cruft](https://cruft.github.io/cruft/) has detected updates
+          [cruft]: https://cruft.github.io/cruft/
           EOF
 
           if git ls-files --others --modified --exclude-standard | xargs grep -q '^<<<<<<< ours'
           then
+            # If the PR is already open and this workflow encounters merge conflicts,
+            # the next time it runs, we want to set the PR back to draft
             echo draft=always-true >> "$GITHUB_OUTPUT"
-            cat << EOF >> /tmp/body.txt
+            cat << EOF >> /tmp/body.md
 
           > [!CAUTION]
           > The update resulted in merge conflicts!
@@ -43,20 +49,21 @@ jobs:
             echo draft=false >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: actions/create-github-app-token@v2
+      - uses: actions/create-github-app-token@v2.0.6
         id: app-token
         with:
+          # These may already be set globally for your organization
+          # If not, see the SHARED-CI.md doc in this repo for instructions
           app-id: ${{ secrets.SHARED_CI_UPDATER_APP_ID }}
           private-key: ${{ secrets.SHARED_CI_UPDATER_PRIVATE_KEY }}
 
-      - name: Create pull request
-        # if: steps.update.outputs.has_updates == 'true'
+      - name: Create pull request if needed
         uses: peter-evans/create-pull-request@v7.0.8
         with:
           token: ${{ steps.app-token.outputs.token }}
           title: Update shared CI files
           commit-message: "chore: update shared CI files"
+          body-path: /tmp/body.md
           branch: cruft/update
-          delete-branch: true
           draft: ${{ steps.update.outputs.draft }}
-          body-path: /tmp/body.txt
+          delete-branch: true
