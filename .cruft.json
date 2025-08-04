@@ -1,6 +1,6 @@
 {
   "template": "https://github.com/chmeliik/task-repo-shared-ci",
-  "commit": "0709a0a23c4e0bda6ff2d2f9dcfb250c2a40ba7f",
+  "commit": "e5b6faea5d2c9245d983d9d646a8cb7e6ce189e2",
   "checkout": null,
   "context": {
     "cookiecutter": {
@@ -9,7 +9,7 @@
         "*"
       ],
       "_template": "https://github.com/chmeliik/task-repo-shared-ci",
-      "_commit": "0709a0a23c4e0bda6ff2d2f9dcfb250c2a40ba7f"
+      "_commit": "e5b6faea5d2c9245d983d9d646a8cb7e6ce189e2"
     }
   },
   "directory": null
