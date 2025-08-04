@@ -1,5 +1,5 @@
 {
-  "template": "https://github.com/chmeliik/task-repo-boilerplate",
+  "template": "https://github.com/chmeliik/task-repo-shared-ci",
   "commit": "f6513e1caa59f6724a0beb76a1f83c8d36feea35",
   "checkout": null,
   "context": {
@@ -8,7 +8,7 @@
       "_copy_without_render": [
         "*"
       ],
-      "_template": "https://github.com/chmeliik/task-repo-boilerplate",
+      "_template": "https://github.com/chmeliik/task-repo-shared-ci",
       "_commit": "f6513e1caa59f6724a0beb76a1f83c8d36feea35"
     }
   },
