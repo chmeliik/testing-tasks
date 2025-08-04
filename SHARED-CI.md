@@ -1,12 +1,12 @@
 <!--
 <TEMPLATED FILE!>
-This file comes from the templates at https://github.com/chmeliik/task-repo-boilerplate.
+This file comes from the templates at https://github.com/chmeliik/task-repo-shared-ci.
 Please consider sending a PR upstream instead of editing the file directly.
 -->
 
 # 🤝 Shared CI setup for Konflux Task repos
 
-Some of the CI scripts and workflows in this repo come from the [task-repo-boilerplate]
+Some of the CI scripts and workflows in this repo come from the [task-repo-shared-ci]
 template repo.
 
 All the files that come from the template repo have a `<TEMPLATED FILE!>` comment
@@ -33,7 +33,7 @@ sends automated PRs. See [Shared CI Updater](#shared-ci-updater) for more detail
 ## 🔧 Making changes
 
 You can edit the shared CI files if necessary, but please consider sending PRs
-for the upstream [task-repo-boilerplate] templates to reduce drift and so that
+for the upstream [task-repo-shared-ci] templates to reduce drift and so that
 others can benefit from the changes as well.
 
 `cruft` *will* try to respect your custom patches during the update process, but
@@ -67,7 +67,7 @@ script. See the [trusted-artifacts generator] README for more details.
 
 - workflow: [`.github/workflows/update-shared-ci.yaml`](.github/workflows/update-shared-ci.yaml)
 
-Periodically (every Sunday, by default) checks for updates in the [task-repo-boilerplate]
+Periodically (every Sunday, by default) checks for updates in the [task-repo-shared-ci]
 templates and sends automated PRs.
 
 You can also trigger it manually from the Actions tab of your repo.
@@ -106,7 +106,7 @@ to avoid those restrictions.
 3. Click `New GitHub App`.
 4. Configure the app:
    - **GitHub App name**: e.g. `${org_name} shared CI updater`
-   - **Homepage URL**: <https://github.com/chmeliik/task-repo-boilerplate/blob/main/SHARED-CI.md#shared-ci-updater>
+   - **Homepage URL**: <https://github.com/chmeliik/task-repo-shared-ci/blob/main/SHARED-CI.md#shared-ci-updater>
    - **Webhook**: uncheck the `☑️ Active` option
    - **Permissions**:
      - **Repository permissions**:
@@ -124,7 +124,7 @@ to avoid those restrictions.
    - `SHARED_CI_UPDATER_APP_ID`: the App ID number
    - `SHARED_CI_UPDATER_PRIVATE_KEY`: plaintext content of the private key
 
-[task-repo-boilerplate]: https://github.com/chmeliik/task-repo-boilerplate
+[task-repo-shared-ci]: https://github.com/chmeliik/task-repo-shared-ci
 [cruft]: https://cruft.github.io/cruft
 [uv]: https://docs.astral.sh/uv/
 [recipe.yaml]: https://github.com/konflux-ci/build-definitions/tree/main/task-generator/trusted-artifacts#configuration-in-recipeyaml
