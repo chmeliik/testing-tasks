@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # <TEMPLATED FILE!>
-# This file comes from the templates at https://github.com/chmeliik/task-repo-boilerplate.
+# This file comes from the templates at https://github.com/chmeliik/task-repo-shared-ci.
 # Please consider sending a PR upstream instead of editing the file directly.
 # See the SHARED-CI.md document in this repo for more details.
 
