@@ -36,7 +36,7 @@ others can benefit from the changes as well.
 `cruft` *will* try to respect your custom patches during the update process, but
 as you make more local changes you increase the chance of merge conflicts.
 
-## ☑️ CI checks
+## ☑️ CI workflows
 
 ### Trusted Artifacts
 
@@ -60,8 +60,70 @@ directory, define a [`recipe.yaml`][recipe.yaml] inside the directory and genera
 the TA variant using the [`hack/generate-ta-tasks.sh`](hack/generate-ta-tasks.sh)
 script. See the [trusted-artifacts generator] README for more details.
 
+### Shared CI Updater
+
+- workflow: [`.github/workflows/update-shared-ci.yaml`](.github/workflows/update-shared-ci.yaml)
+
+Periodically (every Sunday, by default) checks for updates in the [task-repo-boilerplate]
+templates and sends automated PRs.
+
+You can also trigger it manually from the Actions tab of your repo.
+
+> [!NOTE]
+> If you've made custom edits to your shared CI files, then the update process
+> can encounter merge conflicts. When that happens, the workflow will send the
+> PR anyway but with the merge conflicts included. The PR will be in draft state
+> and will include a caution note (like this one, but red) with instructions.
+
+#### Required secrets
+
+- `SHARED_CI_UPDATER_APP_ID` - the ID of the updater GitHub app
+- `SHARED_CI_UPDATER_PRIVATE_KEY` - the private key for the updater GitHub app
+
+These may already be set globally for your organization. If not, see the instructions
+below.
+
+#### Updater GitHub app
+
+The update workflow uses the credentials of a GitHub app to create pull requests,
+rather than the default [`GITHUB_TOKEN`][GITHUB_TOKEN]. There are two reasons:
+
+1. PRs created using `GITHUB_TOKEN` cannot trigger `on: pull_request` or `on: push`
+   workflows
+2. It's not possible to grant `GITHUB_TOKEN` the permission to edit `.github/workflows/`
+   files
+
+Since the shared CI updater is *all about* workflows, it needs to use app credentials
+to avoid those restrictions.
+
+##### Set up the GitHub app
+
+1. Go to your organization or user settings on GitHub
+2. Go to `Developer settings` > `GitHub Apps`
+3. Click `New GitHub App`.
+4. Configure the app:
+   - **GitHub App name**: e.g. `${org_name} shared CI updater`
+   - **Homepage URL**: <https://github.com/chmeliik/task-repo-boilerplate/blob/main/SHARED-CI.md#shared-ci-updater>
+   - **Webhook**: uncheck the `☑️ Active` option
+   - **Permissions**:
+     - **Repository permissions**:
+        - Contents: `Read and write`
+        - Pull requests: `Read and write`
+        - Workflows: `Read and write`
+
+##### Set the required secrets
+
+1. On the app's settings page, copy the App ID number and generate a private key
+2. Go to your organization settings (to set the secrets org-wide)
+   or your repository settings
+3. Go to `Secrets and variables` > `Actions`
+4. Create the secrets
+   - `SHARED_CI_UPDATER_APP_ID`: the App ID number
+   - `SHARED_CI_UPDATER_PRIVATE_KEY`: plaintext content of the private key
+
 [task-repo-boilerplate]: https://github.com/chmeliik/task-repo-boilerplate
 [cruft]: https://cruft.github.io/cruft
 [uv]: https://docs.astral.sh/uv/
 [recipe.yaml]: https://github.com/konflux-ci/build-definitions/tree/main/task-generator/trusted-artifacts#configuration-in-recipeyaml
 [trusted-artifacts generator]: https://github.com/konflux-ci/build-definitions/tree/main/task-generator/trusted-artifacts
+[GITHUB_TOKEN]: https://docs.github.com/en/actions/concepts/security/github_token
