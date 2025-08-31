@@ -1,6 +1,6 @@
 <!--
 <TEMPLATED FILE!>
-This file comes from the templates at https://github.com/chmeliik/task-repo-shared-ci.
+This file comes from the templates at https://github.com/konflux-ci/task-repo-shared-ci.
 Please consider sending a PR upstream instead of editing the file directly.
 -->
 
@@ -106,7 +106,7 @@ to avoid those restrictions.
 3. Click `New GitHub App`.
 4. Configure the app:
    - **GitHub App name**: e.g. `${org_name} shared CI updater`
-   - **Homepage URL**: <https://github.com/chmeliik/task-repo-shared-ci/blob/main/SHARED-CI.md#shared-ci-updater>
+   - **Homepage URL**: <https://github.com/konflux-ci/task-repo-shared-ci/blob/main/SHARED-CI.md#shared-ci-updater>
    - **Webhook**: uncheck the `☑️ Active` option
    - **Permissions**:
      - **Repository permissions**:
@@ -124,7 +124,7 @@ to avoid those restrictions.
    - `SHARED_CI_UPDATER_APP_ID`: the App ID number
    - `SHARED_CI_UPDATER_PRIVATE_KEY`: plaintext content of the private key
 
-[task-repo-shared-ci]: https://github.com/chmeliik/task-repo-shared-ci
+[task-repo-shared-ci]: https://github.com/konflux-ci/task-repo-shared-ci
 [cruft]: https://cruft.github.io/cruft
 [uv]: https://docs.astral.sh/uv/
 [recipe.yaml]: https://github.com/konflux-ci/build-definitions/tree/main/task-generator/trusted-artifacts#configuration-in-recipeyaml

@@ -1,5 +1,5 @@
 # <TEMPLATED FILE!>
-# This file comes from the templates at https://github.com/chmeliik/task-repo-shared-ci.
+# This file comes from the templates at https://github.com/konflux-ci/task-repo-shared-ci.
 # Please consider sending a PR upstream instead of editing the file directly.
 # See the SHARED-CI.md document in this repo for more details.
 
@@ -28,7 +28,7 @@ jobs:
           git restore --staged .
 
           cat << EOF > /tmp/body.md
-          [cruft] has found updates in <https://github.com/chmeliik/task-repo-shared-ci>
+          [cruft] has found updates in <https://github.com/konflux-ci/task-repo-shared-ci>
 
           [cruft]: https://cruft.github.io/cruft/
           EOF
