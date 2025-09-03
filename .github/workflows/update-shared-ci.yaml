@@ -24,7 +24,7 @@ jobs:
           #!/bin/bash
           set -euo pipefail
 
-          pipx run cruft update --skip-apply-ask
+          pipx run cruft update --skip-apply-ask --checkout renovate
           git restore --staged .
 
           cat << EOF > /tmp/body.md
