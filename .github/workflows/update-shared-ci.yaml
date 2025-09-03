@@ -1,5 +1,5 @@
 # <TEMPLATED FILE!>
-# This file comes from the templates at https://github.com/chmeliik/task-repo-shared-ci.
+# This file comes from the templates at https://github.com/konflux-ci/task-repo-shared-ci.
 # Please consider sending a PR upstream instead of editing the file directly.
 # See the SHARED-CI.md document in this repo for more details.
 
@@ -28,7 +28,7 @@ jobs:
           git restore --staged .
 
           cat << EOF > /tmp/body.md
-          [cruft] has found updates in <https://github.com/chmeliik/task-repo-shared-ci>
+          [cruft] has found updates in <https://github.com/konflux-ci/task-repo-shared-ci>
 
           [cruft]: https://cruft.github.io/cruft/
           EOF
@@ -57,6 +57,28 @@ jobs:
           else
             echo draft=false >> "$GITHUB_OUTPUT"
           fi
+
+          if [[ ! -e renovate.json ]]; then
+            echo "renovate.json doesn't exist, skipping update" >&2
+            exit
+          fi
+
+          renovate_update_script=hack/renovate-ignore-shared-ci.sh
+
+          for conflict in "${merge_conflicts[@]}" "${rejected_patches[@]}"; do
+            if [[ "$conflict" == "$renovate_update_script" ]]; then
+              cat << EOF >> /tmp/body.md
+          >
+          > ⚠️ As one of the merge conflicts affects `$renovate_update_script`, the workflow
+          > was not able to run the script. After resolving the conflict, please run the
+          > script manually and commit the changes, if any.
+          EOF
+              echo "cannot run $renovate_update_script due to merge conflict, skipping" >&2
+              exit
+            fi
+          done
+
+          bash "$renovate_update_script"
 
       - uses: actions/create-github-app-token@v2.0.6
         id: app-token

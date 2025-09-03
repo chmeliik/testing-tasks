@@ -1,15 +1,15 @@
 {
-  "template": "https://github.com/chmeliik/task-repo-shared-ci",
-  "commit": "e5b6faea5d2c9245d983d9d646a8cb7e6ce189e2",
-  "checkout": null,
+  "template": "https://github.com/konflux-ci/task-repo-shared-ci",
+  "commit": "db41a4c47479e84c2b07833222179244f02c7ab7",
+  "checkout": "renovate",
   "context": {
     "cookiecutter": {
       "repo_root": ".",
       "_copy_without_render": [
         "*"
       ],
-      "_template": "https://github.com/chmeliik/task-repo-shared-ci",
-      "_commit": "e5b6faea5d2c9245d983d9d646a8cb7e6ce189e2"
+      "_template": "https://github.com/konflux-ci/task-repo-shared-ci",
+      "_commit": "db41a4c47479e84c2b07833222179244f02c7ab7"
     }
   },
   "directory": null

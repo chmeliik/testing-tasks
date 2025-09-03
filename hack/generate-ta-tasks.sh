@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # <TEMPLATED FILE!>
-# This file comes from the templates at https://github.com/chmeliik/task-repo-shared-ci.
+# This file comes from the templates at https://github.com/konflux-ci/task-repo-shared-ci.
 # Please consider sending a PR upstream instead of editing the file directly.
 # See the SHARED-CI.md document in this repo for more details.
 
@@ -19,7 +19,7 @@ command -v go &> /dev/null || { echo Please install golang to run this tool; exi
 HACK_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 ROOT_DIR="$(git rev-parse --show-toplevel)"
 TASK_DIR="$(realpath "${ROOT_DIR}/task")"
-: "${TRUSTED_ARTIFACTS=../build-definitions/task-generator/trusted-artifacts}"
+: "${TRUSTED_ARTIFACTS=github.com/konflux-ci/build-definitions/task-generator/trusted-artifacts@latest}"
 
 tashdir="$(mktemp --dry-run)"
 if [[ -d "${TRUSTED_ARTIFACTS}" ]]; then
