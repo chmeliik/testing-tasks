@@ -31,7 +31,7 @@ new_renovate_json=$(
 )
 
 if [[ -z "$new_renovate_json" ]]; then
-    echo "renovate.json is up to date" >&2
+    echo "renovate.json already up to date" >&2
 else
     if [[ -e renovate.json ]]; then
         echo "updated renovate.json" >&2
