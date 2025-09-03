@@ -69,9 +69,8 @@ jobs:
             if [[ "$conflict" == "$renovate_update_script" ]]; then
               cat << EOF >> /tmp/body.md
           >
-          > ⚠️ As one of the merge conflicts affects `$renovate_update_script`, the workflow
-          > was not able to run the script. After resolving the conflict, please run the
-          > script manually and commit the changes, if any.
+          > ⚠️ \`$renovate_update_script\` has a merge conflict, the workflow couldn't run it.
+          > After resolving the conflict, please run the script manually.
           EOF
               echo "cannot run $renovate_update_script due to merge conflict, skipping" >&2
               exit
