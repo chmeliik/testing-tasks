@@ -1,6 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "ignorePaths": [
+    ".github/workflows/test.yaml",
     ".github/workflows/update-shared-ci.yaml"
   ]
 }
