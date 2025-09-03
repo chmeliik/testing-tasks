@@ -68,8 +68,10 @@ jobs:
           for conflict in "${merge_conflicts[@]}" "${rejected_patches[@]}"; do
             if [[ "$conflict" == "$renovate_update_script" ]]; then
               cat << EOF >> /tmp/body.md
+
+          > [!WARNING]
           >
-          > ⚠️ \`$renovate_update_script\` has a merge conflict, the workflow couldn't run it.
+          > \`$renovate_update_script\` has a merge conflict, the workflow couldn't run it.
           > After resolving the conflict, please run the script manually.
           EOF
               echo "cannot run $renovate_update_script due to merge conflict, skipping" >&2
