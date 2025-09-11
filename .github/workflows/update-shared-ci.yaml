@@ -24,7 +24,7 @@ jobs:
           #!/bin/bash
           set -euo pipefail
 
-          pipx run cruft update --skip-apply-ask --checkout renovate
+          pipx run cruft update --skip-apply-ask
           git restore --staged .
 
           cat << EOF > /tmp/body.md
@@ -34,7 +34,7 @@ jobs:
           EOF
 
           mapfile -t merge_conflicts < <(
-            git ls-files --modified | xargs grep --files-with-matches '^<<<<<<< ours'
+            git diff --diff-filter=M --name-only | xargs grep --files-with-matches '^<<<<<<< ours'
           )
           mapfile -t rejected_patches < <(
             git ls-files --others | grep '\.rej$'
@@ -52,14 +52,37 @@ jobs:
           >
           > Please address the problems manually and then mark the PR ready for review.
           >
-          $(printf '> - ❌ `%s`\n' "${merge_conflicts[@]}" "${rejected_patches[@]}")
           EOF
+            # shellcheck disable=SC2016  # we don't want to expand the backticks
+            printf '> - ❌ `%s`\n' "${merge_conflicts[@]}" "${rejected_patches[@]}" >> /tmp/body.md
           else
             echo draft=false >> "$GITHUB_OUTPUT"
           fi
 
-          if [[ ! -e renovate.json ]]; then
-            echo "renovate.json doesn't exist, skipping update" >&2
+          renovate_config_exists() {
+            # https://docs.renovatebot.com/configuration-options/
+            local renovate_config_paths=(
+              renovate.json
+              renovate.json5
+              .github/renovate.json
+              .github/renovate.json5
+              .gitlab/renovate.json
+              .gitlab/renovate.json5
+              .renovaterc
+              .renovaterc.json
+              .renovaterc.json5
+            )
+
+            for file in "${renovate_config_paths[@]}"; do
+              if [[ -e "$file" ]]; then
+                return 0
+              fi
+            done
+
+            return 1
+          }
+          if ! renovate_config_exists; then
+            echo "Renovate config file not found, skipping update" >&2
             exit
           fi
 
