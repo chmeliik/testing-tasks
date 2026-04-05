@@ -1,0 +1,245 @@
+diff a/SHARED-CI.md b/SHARED-CI.md	(rejected hunks)
+@@ -100,14 +360,32 @@ You can also trigger it manually from the Actions tab of your repo.
+ > can encounter merge conflicts. When that happens, the workflow will send the
+ > PR anyway but with the merge conflicts included. The PR will be in draft state
+ > and will include a caution note (like this one, but red) with instructions.
++>
++> If your repository uses Renovate for automated dependency updates, that may increase
++> the chance of merge conflicts. See [Conflicts with Renovate](#conflicts-with-renovate)
++> for the solution.
++
++#### Updater requirements
++
++- Install your organization's updater GitHub app in your repository. If the app
++  doesn't exist yet, an administrator can follow the [instructions](#set-up-the-github-app)
++  to create it.
++  - If your repository is in <https://github.com/konflux-ci>, use the [konflux-ci-shared-ci-updater]
++    app. The [build-maintainers] team can provide the values for the secrets below.
++- In the repository settings (`Secrets and variables` > `Actions`), add the required
++  secrets. Ask an administrator to provide their values:
++  - `SHARED_CI_UPDATER_APP_ID` - the ID of the updater GitHub app
++  - `SHARED_CI_UPDATER_PRIVATE_KEY` - plaintext content of the private key
++    for the updater GitHub app
++- Add a branch protection rule for the main branch in the repository. Enable the
++  `Require a pull request before merging` setting with at least 1 required approval.
++  This is not strictly required, but helps reduce the potential consequences if the
++  GitHub app secrets were leaked.
+ 
+-#### Required secrets
+-
+-- `SHARED_CI_UPDATER_APP_ID` - the ID of the updater GitHub app
+-- `SHARED_CI_UPDATER_PRIVATE_KEY` - the private key for the updater GitHub app
+-
+-These may already be set globally for your organization. If not, see the instructions
+-below.
++> [!NOTE]
++> It may be tempting to make the secrets organization-wide, to avoid having to set
++> them individually for each repo. But consider the security implications - more
++> repos with access to the secrets means more chances for an attacker to steal them.
+ 
+ #### Updater GitHub app
+ 
+@@ -136,21 +414,195 @@ to avoid those restrictions.
+         - Contents: `Read and write`
+         - Pull requests: `Read and write`
+         - Workflows: `Read and write`
++5. On the app's settings page, copy the App ID number and generate a private key.
++   Store the private key somewhere safe. Each repo that wants to use the updater
++   will need this key.
++
++#### Conflicts with Renovate
++
++If your repository uses [Renovate], you could frequently get merge conflicts
++during the Shared CI updates, because your repository gets GitHub Actions updates
++at a different rate than the upstream [task-repo-shared-ci] repository.
++
++To avoid that, your repo gets the [`hack/renovate-ignore-shared-ci.sh`](hack/renovate-ignore-shared-ci.sh)
++script. Run this script during the [onboarding process] to add all the Shared CI
++workflows to the [`ignorePaths`][renovate-ignorepaths] in your `renovate.json`.
++Afterwards, any time the updater workflow brings in a new workflow file, it will
++run the script to automatically update `renovate.json`.
++
++This ensures your Shared CI workflows follow the GitHub Actions versions defined
++in the upstream reposistory and avoids unnecessary merge conflicts.
++
++### Task Validation and Integration Tests
++
++- workflow: [`.github/workflows/run-task-tests.yaml`](.github/workflows/run-task-tests.yaml)
++- tests script: [`.github/scripts/test_tekton_tasks.sh`](.github/scripts/test_tekton_tasks.sh)
++- validation script: [`.github/scripts/check_tekton_tasks.sh`](.github/scripts/check_tekton_tasks.sh)
++
++To ensure all Tekton Tasks are well-formed and valid, a single `Run Task Tests` workflow is executed on every pull request that modifies files in the `task/` directory.
++
++This workflow is designed to be efficient by following a two-stage logic:
++
++1. `Syntax Validation`
++2. `Integration Tests`
++
++#### How to Add a Test
++
++1. Create a `tests` directory alongside the task YAML file.
++
++2. Inside the `tests` directory, create a test file named `test-*.yaml` (for example, `test-hello.yaml`).
++   - The script **automatically** discovers tests based on this naming convention.
++
++3. The file must define a Tekton `kind: Pipeline` object.
++
++4. The Pipeline must declare a workspace named exactly `tests-workspace`.
++   - The test script will **automatically** provide storage for this workspace when it runs the pipeline.
++
++5. Optionally, add a `pre-apply-task-hook.sh` to the `tests` directory.
++
++#### Example Structure
++
++```plaintext
++task
++└── goodbye
++    ├── goodbye.yaml
++    └── tests                             👈 Test directory
++        ├── test-goodbye.yaml             👈 Test - A Pipeline named test-*.yaml
++        ├── test-goodbye-2.yaml           👈 Test case 2
++        └── pre-apply-task-hook.sh        👈 Optional hook
++```
++
++#### Using a `pre-apply-task-hook.sh`
++
++In some cases, your Task may require certain Kubernetes resources, like **Secrets** or **ConfigMaps**, to exist in the namespace before the Task itself is applied to the cluster.
++
++To handle this, you can create an optional shell script named `pre-apply-task-hook.sh` and place it inside the `tests` directory.
++
++If this script exists, the test runner will execute it **after creating the test namespace but before applying the task**.
++This allows the hook to dynamically modify the task's definition before it is applied. For example, to lower/remove resource requests and limits for a constrained test environment.
++
++The script receives two arguments:
++
++- `$1`: The path to a temporary copy of the task's YAML file.  
++- `$2`: The name of the temporary test namespace where the test will run.  
++
++<details>
++<summary><b>Click to see an example <code>pre-apply-task-hook.sh</code></b></summary>
++
++This script removes comupteResources and creates a dummy docker config secret that a task might need for registry authentication.
++
++```bash
++#!/bin/bash
++
++# This script is called before applying the task to set up required resources.
++TASK_COPY="$1"
++TEST_NS="$2"
++
++# Remove computeResources - allows tasks with high resource requirements
++# to run in a resource-constrained test environment (e.g., local Kind cluster)
++echo "Removing computeResources for task: $1"
++yq -i eval '.spec.steps[0].computeResources = {}' $1
++yq -i eval '.spec.steps[1].computeResources = {}' $1
+ 
+-##### Set the required secrets
++# Create a dummy docker config secret for registry authentication
++echo '{"auths":{}}' | kubectl create secret generic dummy-secret \
++  --from-file=.dockerconfigjson=/dev/stdin \
++  --type=kubernetes.io/dockerconfigjson \
++  -n "$TEST_NS" --dry-run=client -o yaml | kubectl apply -f - -n "$TEST_NS"
+ 
+-1. On the app's settings page, copy the App ID number and generate a private key
+-2. Go to your organization settings (to set the secrets org-wide)
+-   or your repository settings
+-3. Go to `Secrets and variables` > `Actions`
+-4. Create the secrets
+-   - `SHARED_CI_UPDATER_APP_ID`: the App ID number
+-   - `SHARED_CI_UPDATER_PRIVATE_KEY`: plaintext content of the private key
++echo "Pre-requirements setup complete for namespace: $TEST_NS"
++
++```
++
++</details>  
++
++### Tekton Security Task Lint
++
++To enforce secure CI practices, we lint all Tekton Tasks on every pull request using the `task-lint.yaml` workflow.
++
++#### Purpose
++
++This check **disallows using `$(params.*)` variable substitution directly within a `script` block** of a Tekton Task.
++
++Using `$(params.*)` directly in a script creates a security flaw. Tekton performs a raw text replacement of the parameter placeholder before the script is executed. This means if a parameter's value contains malicious shell commands, they will be run, leading to **arbitrary code execution**.
++
++For more details and guidance on fixing the issue, see the [Tekton recommendations](https://github.com/tektoncd/catalog/blob/main/recommendations.md#dont-use-interpolation-in-scripts-or-string-arguments)
++
++### Versioning
++
++- script: [`hack/versioning.py`](hack/versioning.py)
++  - The `check` subcommand checks versioning requirements for new and modified Tasks
++  - The `new-changelog` subcommand creates basic `CHANGELOG.md`s for the specified Tasks
++- workflow: [`.github/workflows/versioning.yaml`](.github/workflows/versioning.yaml)
++  - Runs the `check` subcommand for PRs
++
++#### Versioning requirements
++
++1. Tasks must have the `app.kubernetes.io/version` label
++
++    ```yaml
++    metadata:
++      labels:
++        app.kubernetes.io/version: "0.1.0"
++    ```
++
++    1. The version label must be in the form `x.y` or `x.y.z`, where `x y z` are integers
++
++2. Tasks must have a CHANGELOG.md at `task/${task_name}/CHANGELOG.md`.
++   For details about the format, see [ADR 54: CHANGELOG.md format].
++3. When modifying existing Tasks:
++    1. If you want the change to get released, update the version label.
++       Otherwise, CI may skip building the Task.
++    2. If the change is relevant to users, update the CHANGELOG.md.
++       If you're not updating the version label, update the `Unreleased` section.
++
++Check versioning requirements for the files that got modified/added between the
++base revision (defaults to `main`) and your current HEAD:
++
++```bash
++hack/versioning.py check
++```
++
++> [!NOTE]
++> When processing existing Tasks, the script treats most violations as warnings,
++> not errors. Some of the requirements are new, so the check aims to inform about
++> them but not to block PRs from getting merged.
++>
++> Requirements 3.1. and 3.2. are always only warnings. The goal is to remind the
++> contributor how versioning is done but leave the freedom to make changes without
++> releasing them right away.
++
++#### Adding `CHANGELOG.md`s
++
++Add CHANGELOG.md for a single Task:
++
++```bash
++hack/versioning.py new-changelog task/hello/
++```
++
++Add CHANGELOG.md for all Tasks that don't have one:
++
++```bash
++hack/versioning.py new-changelog task/
++```
++
++> [!NOTE]
++> The script makes no attempt to retroactively document the changes in each Task version.
++> The script simply marks the current version as the one that started tracking changes
++> in CHANGELOG.md. If the highest found version is `<=0.1.0`, it instead marks this
++> as the initial version of the Task.
+ 
+ [task-repo-shared-ci]: https://github.com/konflux-ci/task-repo-shared-ci
++[onboarding process]: https://github.com/konflux-ci/task-repo-shared-ci?tab=readme-ov-file#-onboarding
+ [cruft]: https://cruft.github.io/cruft
+ [uv]: https://docs.astral.sh/uv/
+ [recipe.yaml]: https://github.com/konflux-ci/build-definitions/tree/main/task-generator/trusted-artifacts#configuration-in-recipeyaml
+ [trusted-artifacts generator]: https://github.com/konflux-ci/build-definitions/tree/main/task-generator/trusted-artifacts
+ [GITHUB_TOKEN]: https://docs.github.com/en/actions/concepts/security/github_token
+ [tekton-catalog-structure]: https://github.com/tektoncd/catalog?tab=readme-ov-file#catalog-structure
++[Renovate]: https://docs.renovatebot.com/
++[renovate-ignorepaths]: https://docs.renovatebot.com/configuration-options/#ignorepaths
++[ADR 54: CHANGELOG.md format]: https://github.com/konflux-ci/architecture/blob/main/ADR/0054-task-versioning.md#changelogmd-format
++[To modify Konflux pipelines with modify]: https://github.com/konflux-ci/pipeline-migration-tool?tab=readme-ov-file#to-modify-konflux-pipelines-with-modify
++[konflux-ci-shared-ci-updater]: https://github.com/apps/konflux-ci-shared-ci-updater
++[build-maintainers]: https://github.com/orgs/konflux-ci/teams/build-maintainers

@@ -1,0 +1,72 @@
+diff a/.github/workflows/update-shared-ci.yaml b/.github/workflows/update-shared-ci.yaml	(rejected hunks)
+@@ -34,7 +36,7 @@ jobs:
+           EOF
+ 
+           mapfile -t merge_conflicts < <(
+-            git ls-files --modified | xargs grep --files-with-matches '^<<<<<<< ours'
++            git diff --diff-filter=M --name-only | xargs grep --files-with-matches '^<<<<<<< ours'
+           )
+           mapfile -t rejected_patches < <(
+             git ls-files --others | grep '\.rej$'
+@@ -52,13 +54,59 @@ jobs:
+           >
+           > Please address the problems manually and then mark the PR ready for review.
+           >
+-          $(printf '> - ❌ `%s`\n' "${merge_conflicts[@]}" "${rejected_patches[@]}")
+           EOF
++            # shellcheck disable=SC2016  # we don't want to expand the backticks
++            printf '> - ❌ `%s`\n' "${merge_conflicts[@]}" "${rejected_patches[@]}" >> /tmp/body.md
+           else
+             echo draft=false >> "$GITHUB_OUTPUT"
+           fi
+ 
+-      - uses: actions/create-github-app-token@v2.0.6
++          renovate_config_exists() {
++            # https://docs.renovatebot.com/configuration-options/
++            local renovate_config_paths=(
++              renovate.json
++              renovate.json5
++              .github/renovate.json
++              .github/renovate.json5
++              .gitlab/renovate.json
++              .gitlab/renovate.json5
++              .renovaterc
++              .renovaterc.json
++              .renovaterc.json5
++            )
++
++            for file in "${renovate_config_paths[@]}"; do
++              if [[ -e "$file" ]]; then
++                return 0
++              fi
++            done
++
++            return 1
++          }
++          if ! renovate_config_exists; then
++            echo "Renovate config file not found, skipping update" >&2
++            exit
++          fi
++
++          renovate_update_script=hack/renovate-ignore-shared-ci.sh
++
++          for conflict in "${merge_conflicts[@]}" "${rejected_patches[@]}"; do
++            if [[ "$conflict" == "$renovate_update_script" ]]; then
++              cat << EOF >> /tmp/body.md
++
++          > [!WARNING]
++          >
++          > \`$renovate_update_script\` has a merge conflict, the workflow couldn't run it.
++          > After resolving the conflict, please run the script manually.
++          EOF
++              echo "cannot run $renovate_update_script due to merge conflict, skipping" >&2
++              exit
++            fi
++          done
++
++          bash "$renovate_update_script"
++
++      - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+         id: app-token
+         with:
+           # These may already be set globally for your organization
